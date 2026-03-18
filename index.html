@@ -1,49 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Вход выполнен!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация Todo App</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f7f9; }
-        .btn { background: #3498db; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; text-decoration: none; margin: 10px; display: inline-block; width: 300px; font-weight: bold; }
-        .web-btn { background: #2ecc71; }
+        body { font-family: -apple-system, sans-serif; text-align: center; padding-top: 80px; background: #f4f7f9; color: #333; }
+        .container { max-width: 400px; margin: 0 auto; padding: 20px; border-radius: 20px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .btn { background: #3498db; color: white; padding: 16px 30px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; margin-top: 20px; }
+        .success-icon { font-size: 50px; color: #2ecc71; margin-bottom: 10px; }
+        #debug-info { margin-top: 30px; font-size: 11px; color: #ccc; }
     </style>
 </head>
 <body>
-    <h2>✅ Авторизация успешна</h2>
-    <p>Выберите, куда вы хотите вернуться:</p>
-    
-    <!-- Кнопка для Windows-версии (разбудит установленное приложение) -->
-    <button class="btn" onclick="openWindows()">В ПРИЛОЖЕНИЕ (WINDOWS)</button>
-    <br>
-    <!-- Кнопка для Web-версии (обновит текущую вкладку с localhost) -->
-    <button class="btn web-btn" onclick="openWeb()">В ЭТУ ВКЛАДКУ (WEB)</button>
-
-   <script>
-    const hash = window.location.hash;
-    
-    function handleAuth() {
-        if (!hash) return;
-
-        // 1. Пытаемся разбудить Windows (если нужно)
-        window.location.href = "todoapp://oauth" + hash;
-
-        // 2. СОХРАНЯЕМ ТОКЕН В ОБЩУЮ ПАМЯТЬ БРАУЗЕРА
-        // Это позволит ПЕРВОЙ вкладке увидеть его через SecureStorage
-        const params = new URLSearchParams(hash.substring(1));
-        const token = params.get('access_token');
+    <div class="container">
+        <div class="success-icon">✅</div>
+        <h2 id="main-msg">Авторизация успешна!</h2>
+        <p id="sub-msg">Связываем данные с вашим приложением...</p>
         
-        if (token) {
-            // Ключ, который обычно ищет flutter_secure_storage в вебе
-            localStorage.setItem('yandex_token', token); 
-            
-            document.getElementById('msg').innerText = "✅ Авторизация успешна!";
-            document.getElementById('sub-msg').innerText = "Теперь просто ЗАКРОЙТЕ ЭТУ ВКЛАДКУ и нажмите 'ГОТОВО' в приложении.";
-        }
-    }
-    
-    if (hash) handleAuth();
-</script>
+        <!-- Эта кнопка нужна ТОЛЬКО для Windows, если авто-запуск заблокирован -->
+        <button class="btn" id="winBtn" onclick="openWindows()">ОТКРЫТЬ В WINDOWS</button>
+        
+        <p style="margin-top: 30px; font-size: 14px; color: #666;">
+            Если вы используете <b>Web-версию</b>:<br>
+            Просто закройте эту вкладку и нажмите кнопку <b>"ГОТОВО"</b> в приложении.
+        </p>
+    </div>
 
+    <div id="debug-info"></div>
+
+    <script>
+        const hash = window.location.hash;
+        const urlParams = new URLSearchParams(window.location.search);
+        const origin = urlParams.get('state');
+
+        function log(m) { console.log(m); }
+
+        function openWindows() {
+            if (hash) window.location.href = "todoapp://oauth" + hash;
+        }
+
+        if (hash) {
+            // 1. Попытка для Windows (автоматически)
+            setTimeout(openWindows, 500);
+
+            // 2. ДЛЯ WEB: Сохраняем токен в LocalStorage
+            // Это КРИТИЧНО: первая вкладка (localhost) увидит этот токен через SecureStorage
+            const params = new URLSearchParams(hash.substring(1));
+            const token = params.get('access_token');
+            
+            if (token) {
+                // Записываем токен. В Web версии Flutter Secure Storage ищет данные в LocalStorage.
+                // Мы сохраняем его под ключом, который ты используешь в приложении.
+                localStorage.setItem('yandex_token', token);
+                
+                log("Токен сохранен в LocalStorage");
+                document.getElementById('sub-msg').innerText = "Данные получены. Теперь вы можете закрыть это окно.";
+            }
+        } else {
+            document.getElementById('main-msg').innerText = "❌ Ошибка";
+            document.getElementById('sub-msg').innerText = "Токен не найден в ссылке.";
+            document.getElementById('winBtn').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
