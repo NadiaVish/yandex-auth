@@ -1,43 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Вход выполнен!</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f4f9; }
-        .btn { background: #3498db; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-size: 18px; cursor: pointer; border: none; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: -apple-system, sans-serif; text-align: center; padding-top: 100px; background: #f4f7f9; color: #333; }
+        .btn { background: #3498db; color: white; padding: 16px 32px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; text-transform: uppercase; font-weight: bold; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); }
+        .btn:hover { background: #2980b9; }
+        .status-text { margin-bottom: 30px; font-size: 20px; }
     </style>
 </head>
 <body>
-    <div id="status">
-        <h2>✅ Авторизация успешна</h2>
-        <p>Нажмите кнопку ниже, чтобы вернуться в приложение:</p>
-        <button class="btn" onclick="goBack()">ВЕРНУТЬСЯ В TODO APP</button>
-        <div class="loader" id="loader"></div>
+    <div class="status-text">
+        <h2 id="msg">✅ Авторизация получена</h2>
+        <p>Нажмите кнопку, чтобы вернуться в Todo App:</p>
     </div>
+    
+    <button class="btn" onclick="sendTokenToApp()">ВЕРНУТЬСЯ В ПРИЛОЖЕНИЕ</button>
 
     <script>
-        const fragment = window.location.hash;
+        // 1. Берем токен
+        const hash = window.location.hash;
 
-        function goBack() {
-            if (!fragment) return;
+        function sendTokenToApp() {
+            if (!hash) {
+                document.getElementById('msg').innerText = "❌ Ошибка: Токен не найден";
+                return;
+            }
+
+            // Пытаемся разбудить Windows (todoapp://)
+            window.location.href = "todoapp://oauth" + hash;
+
+            // Пытаемся вернуться в Web (localhost)
+            // Пытаемся найти адрес, откуда пришли, или используем стандартные порты
+            const currentHost = window.location.origin;
+            const referrer = document.referrer;
             
-            // 1. Пытаемся разбудить Windows версию
-            window.location.href = "todoapp://oauth" + fragment;
-
-            // 2. Пытаемся вернуться в Web версию (localhost)
-            // Берем хост из referrer или пробуем стандартный порт 5000
-            const referrer = document.referrer || "http://localhost:5000/";
-            window.location.href = referrer + fragment;
+            // Если мы пришли с локалхоста - возвращаемся туда
+            if (referrer && (referrer.includes('localhost') || referrer.includes('127.0.0.1'))) {
+                window.location.href = referrer + hash;
+            } else {
+                // Если реферер пустой, пробуем самые частые порты Flutter Web
+                window.location.href = "http://localhost:5000/" + hash;
+            }
         }
 
-        // Автоматическая попытка через 1 секунду
-        if (fragment) {
-            setTimeout(goBack, 1000);
-        } else {
-            document.getElementById('status').innerHTML = "<h2>❌ Ошибка: Токен не найден</h2>";
+        // Авто-попытка только через 2 секунды (чтобы не было чехарды)
+        if (hash) {
+            setTimeout(sendTokenToApp, 2000);
         }
     </script>
 </body>
