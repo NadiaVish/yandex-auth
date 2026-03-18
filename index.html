@@ -19,43 +19,31 @@
     <!-- Кнопка для Web-версии (обновит текущую вкладку с localhost) -->
     <button class="btn web-btn" onclick="openWeb()">В ЭТУ ВКЛАДКУ (WEB)</button>
 
-    <script>
-        const hash = window.location.hash;
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Ищем наш localhost порт
-        let origin = urlParams.get('state');
-        if (!origin && hash.includes('state=')) {
-            const hashParams = new URLSearchParams(hash.substring(1));
-            origin = hashParams.get('state');
-        }
-
-        function openWindows() {
-            if (hash) window.location.href = "todoapp://oauth" + hash;
-        }
-
-      function openWeb() {
-    if (!hash) return;
+   <script>
+    const hash = window.location.hash;
     
-    // 1. Записываем токен в LocalStorage браузера
-    // Flutter пакет secure_storage в Вебе читает именно отсюда
-    const token = new URLSearchParams(hash.substring(1)).get('access_token');
-    if (token) {
-        // Ключ должен совпадать с тем, что использует flutter_secure_storage
-        // Обычно это префикс 'VGhpcyBpcyB0aGUgcHJlZml4' (зависит от настроек)
-        // Но проще передать сигнал через BroadcastChannel
-        const bc = new BroadcastChannel('auth_channel');
-        bc.postMessage({ token: token });
+    function handleAuth() {
+        if (!hash) return;
+
+        // 1. Пытаемся разбудить Windows (если нужно)
+        window.location.href = "todoapp://oauth" + hash;
+
+        // 2. СОХРАНЯЕМ ТОКЕН В ОБЩУЮ ПАМЯТЬ БРАУЗЕРА
+        // Это позволит ПЕРВОЙ вкладке увидеть его через SecureStorage
+        const params = new URLSearchParams(hash.substring(1));
+        const token = params.get('access_token');
         
-        document.getElementById('msg').innerText = "✅ Вход выполнен! Закрываем это окно...";
-        
-        // 2. Пытаемся закрыть вкладку (сработает, если ее открыл скрипт)
-        setTimeout(() => { window.close(); }, 1000);
+        if (token) {
+            // Ключ, который обычно ищет flutter_secure_storage в вебе
+            localStorage.setItem('yandex_token', token); 
+            
+            document.getElementById('msg').innerText = "✅ Авторизация успешна!";
+            document.getElementById('sub-msg').innerText = "Теперь просто ЗАКРОЙТЕ ЭТУ ВКЛАДКУ и нажмите 'ГОТОВО' в приложении.";
+        }
     }
-}
+    
+    if (hash) handleAuth();
+</script>
 
-
-        // НИКАКИХ setTimeout! Страница просто ждет твоего клика.
-    </script>
 </body>
 </html>
