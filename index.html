@@ -2,52 +2,70 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Вход выполнен!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация Todo App</title>
     <style>
-        body { font-family: -apple-system, sans-serif; text-align: center; padding-top: 100px; background: #f4f7f9; color: #333; }
-        .btn { background: #3498db; color: white; padding: 16px 32px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; text-transform: uppercase; font-weight: bold; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); }
-        .btn:hover { background: #2980b9; }
-        .status-text { margin-bottom: 30px; font-size: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding-top: 80px; background: #f4f7f9; color: #333; }
+        .container { max-width: 400px; margin: 0 auto; padding: 20px; }
+        .btn { background: #3498db; color: white; padding: 16px 32px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); transition: 0.3s; }
+        .btn:hover { background: #2980b9; transform: translateY(-2px); }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status { margin-bottom: 25px; }
     </style>
 </head>
 <body>
-    <div class="status-text">
-        <h2 id="msg">✅ Авторизация получена</h2>
-        <p>Нажмите кнопку, чтобы вернуться в Todo App:</p>
-    </div>
-    
-    <button class="btn" onclick="sendTokenToApp()">ВЕРНУТЬСЯ В ПРИЛОЖЕНИЕ</button>
-
-   <script>
-    // Получаем токен из хэша (#access_token=...)
-    const fragment = window.location.hash;
-    
-    // Получаем state из параметров поиска (?state=...)
-    const urlParams = new URLSearchParams(window.location.search);
-    const origin = urlParams.get('state');
-
-    function sendTokenToApp() {
-        if (!fragment) return;
-
-        // 1. Пытаемся разбудить Windows (todoapp://)
-        window.location.href = "todoapp://oauth" + fragment;
-
-        // 2. Если есть origin (localhost с портом), возвращаемся туда
-        if (origin) {
-            setTimeout(() => {
-                window.location.href = origin + "/" + fragment;
-            }, 1000);
-        }
+    <div class="container">
+        <div class="status">
+            <h2 id="msg">✅ Авторизация получена</h2>
+            <p id="sub-msg">Связываем с вашим приложением...</p>
+        </div>
         
-        document.getElementById('msg').innerText = "✅ Готово! Возвращаемся в приложение...";
-    }
+        <div id="loader" class="loader"></div>
+        
+        <!-- Кнопка на случай, если авто-редирект заблокирован браузером -->
+        <button class="btn" onclick="sendTokenToApp()">ВЕРНУТЬСЯ В ПРИЛОЖЕНИЕ</button>
+    </div>
 
-    if (fragment) {
-        setTimeout(sendTokenToApp, 500);
-    }
-</script>
+    <script>
+        // 1. Берем токен из хэша (#access_token=...)
+        const fragment = window.location.hash;
+        
+        // 2. Достаем наш оригинальный localhost:порт из параметра state (?state=...)
+        const urlParams = new URLSearchParams(window.location.search);
+        const origin = urlParams.get('state');
 
+        function sendTokenToApp() {
+            if (!fragment) {
+                document.getElementById('msg').innerText = "❌ Ошибка";
+                document.getElementById('sub-msg').innerText = "Токен не найден в ссылке.";
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
 
+            // А. Пытаемся разбудить Windows версию (если установлена)
+            window.location.href = "todoapp://oauth" + fragment;
 
+            // Б. Если есть origin (наш localhost), возвращаемся в Web-вкладку
+            if (origin) {
+                setTimeout(() => {
+                    // Редиректим на http://localhost:PORT/#access_token=...
+                    window.location.href = origin + "/" + fragment;
+                }, 1000);
+            } else {
+                document.getElementById('sub-msg').innerText = "Готово! Теперь вы можете вернуться в приложение вручную.";
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        // Автоматический запуск через 1 секунду после загрузки страницы
+        if (fragment) {
+            setTimeout(sendTokenToApp, 1000);
+        } else {
+            document.getElementById('msg').innerText = "❌ Ошибка";
+            document.getElementById('sub-msg').innerText = "Нет данных для авторизации.";
+            document.getElementById('loader').style.display = 'none';
+        }
+    </script>
 </body>
 </html>
