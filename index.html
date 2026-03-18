@@ -38,7 +38,6 @@
     } else {
         document.getElementById('winBtn').style.display = 'inline-block';
         document.getElementById('instruction').innerText = "Возвращаем вас в приложение...";
-       // setTimeout(handleWindows, 1000);
     }
 
     function handleWindows() {
@@ -47,7 +46,7 @@
              setTimeout(() => {
             window.open('', '_self', ''); 
             window.close();
-        }, 1000); 
+        }, 100); 
         }
     }
 
