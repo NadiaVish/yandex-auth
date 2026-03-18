@@ -20,38 +20,34 @@
 
     <div id="debug-log">Инициализация логов...</div>
 
-  <script>
-    const hash = window.location.hash; // Тут всё: #state=...&access_token=...
+<script>
+    const hash = window.location.hash;
     const urlParams = new URLSearchParams(window.location.search);
-    const debugElement = document.getElementById('debug-log');
-
-    function log(msg) {
-        debugElement.innerHTML += "<br>" + msg;
-        console.log(msg);
-    }
-
-    // Умный поиск state: сначала в URL, потом внутри хэша
+    
+    // Ищем state (наш порт) везде
     let origin = urlParams.get('state');
     if (!origin && hash.includes('state=')) {
         const hashParams = new URLSearchParams(hash.substring(1));
         origin = hashParams.get('state');
     }
 
-    log("Hash найден: " + (hash ? "ДА" : "НЕТ"));
-    log("Реальный Origin (из state): " + origin);
+    function returnToApp() {
+        if (!hash) return;
 
-    function openWeb() {
-        // Теперь мы точно знаем порт (64136)
-        const target = origin || "http://localhost:5000";
-        const finalUrl = target + "/" + hash;
-        log("👉 РЕДИРЕКТ В WEB: " + finalUrl);
-        window.location.href = finalUrl;
+        // Если мы в ВЕБЕ (есть origin), просто меняем адрес ТЕКУЩЕЙ вкладки
+        if (origin && origin !== 'pc_version') {
+            window.location.href = origin + "/" + hash;
+        } else {
+            // Если мы на Windows, будим приложение по протоколу
+            window.location.href = "todoapp://oauth" + hash;
+            // И пишем текст, чтобы человек закрыл вкладку
+            document.getElementById('msg').innerText = "✅ Готово! Можете закрыть вкладку.";
+        }
     }
 
-    if (hash) {
-        setTimeout(openWeb, 1000);
-    }
+    // УДАЛИЛИ setTimeout(returnToApp, 1000); - теперь только по кнопке!
 </script>
+
 
 </body>
 </html>
