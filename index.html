@@ -66,16 +66,16 @@
         }
 
         // Авто-попытка через 2 секунды (не 20!)
-        if (hash) {
-            setTimeout(() => {
-                log("Запуск авто-редиректа...");
-                if (origin && origin.includes('localhost')) {
-                    openWeb();
-                } else {
-                    openWindows();
-                }
-            }, 2000);
-        }
+        // if (hash) {
+        //     setTimeout(() => {
+        //         log("Запуск авто-редиректа...");
+        //         if (origin && origin.includes('localhost')) {
+        //             openWeb();
+        //         } else {
+        //             openWindows();
+        //         }
+        //     }, 2000);
+        // }
     </script>
 </body>
 </html>
