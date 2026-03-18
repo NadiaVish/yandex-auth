@@ -18,32 +18,33 @@
     
     <button class="btn" onclick="sendTokenToApp()">ВЕРНУТЬСЯ В ПРИЛОЖЕНИЕ</button>
 
-        <script>
-        const hash = window.location.hash;
+    <script>
+    // 1. Берем фрагмент (там токен) и параметры запроса (там наш state)
+    const fragment = window.location.hash;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // 2. Достаем наш оригинальный адрес (localhost с нужным портом)
+    const origin = urlParams.get('state') || "http://localhost:5000";
 
-        function sendTokenToApp() {
-            if (!hash) return;
+    function sendTokenToApp() {
+        if (!fragment) return;
 
-            // 1. Для Windows (todoapp://)
-            window.location.href = "todoapp://oauth" + hash;
+        // Пытаемся разбудить Windows версию
+        window.location.href = "todoapp://oauth" + fragment;
 
-            // 2. Для Web (localhost с динамическим портом)
-            // Пытаемся взять точный адрес, откуда пришел пользователь
-            const referrer = document.referrer;
-            
-            if (referrer && (referrer.includes('localhost') || referrer.includes('127.0.0.1'))) {
-                // Редиректим именно туда, где запущено приложение ПРЯМО СЕЙЧАС
-                window.location.href = referrer + hash;
-            } else {
-                // Если реферер потерялся, пишем инструкцию
-                document.getElementById('msg').innerText = "⚠️ Не удалось определить порт приложения. Вернитесь в него вручную.";
-            }
-        }
+        // Пытаемся вернуться в Web (на ПРАВИЛЬНЫЙ порт)
+        setTimeout(() => {
+            window.location.href = origin + "/" + fragment;
+        }, 1000);
 
-        if (hash) {
-            setTimeout(sendTokenToApp, 1000);
-        }
-        </script>
+        document.getElementById('msg').innerText = "✅ Готово! Возвращаемся в приложение...";
+    }
+
+    if (fragment) {
+        setTimeout(sendTokenToApp, 500);
+    }
+</script>
+
 
 </body>
 </html>
