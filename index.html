@@ -1,70 +1,45 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Авторизация Todo App</title>
+    <title>Вход выполнен!</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding-top: 80px; background: #f4f7f9; color: #333; }
-        .container { max-width: 400px; margin: 0 auto; padding: 20px; }
-        .btn { background: #3498db; color: white; padding: 16px 32px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3); transition: 0.3s; }
-        .btn:hover { background: #2980b9; transform: translateY(-2px); }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .status { margin-bottom: 25px; }
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f7f9; }
+        .btn { background: #3498db; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin: 10px; display: inline-block; width: 280px; }
+        .web-btn { background: #2ecc71; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="status">
-            <h2 id="msg">✅ Авторизация получена</h2>
-            <p id="sub-msg">Связываем с вашим приложением...</p>
-        </div>
-        
-        <div id="loader" class="loader"></div>
-        
-        <!-- Кнопка на случай, если авто-редирект заблокирован браузером -->
-        <button class="btn" onclick="sendTokenToApp()">ВЕРНУТЬСЯ В ПРИЛОЖЕНИЕ</button>
-    </div>
+    <h2 id="msg">✅ Авторизация успешна</h2>
+    <p>Выберите, куда вернуться:</p>
+    
+    <!-- Кнопка для Windows версии -->
+    <button class="btn" onclick="openWindowsApp()">ОТКРЫТЬ ПРИЛОЖЕНИЕ (Windows)</button>
+    <br>
+    <!-- Кнопка для Web версии (localhost) -->
+    <button class="btn web-btn" id="webBtn" onclick="openWebApp()">ВЕРНУТЬСЯ В БРАУЗЕР (Web)</button>
 
     <script>
-        // 1. Берем токен из хэша (#access_token=...)
-        const fragment = window.location.hash;
-        
-        // 2. Достаем наш оригинальный localhost:порт из параметра state (?state=...)
+        const hash = window.location.hash;
         const urlParams = new URLSearchParams(window.location.search);
         const origin = urlParams.get('state');
 
-        function sendTokenToApp() {
-            if (!fragment) {
-                document.getElementById('msg').innerText = "❌ Ошибка";
-                document.getElementById('sub-msg').innerText = "Токен не найден в ссылке.";
-                document.getElementById('loader').style.display = 'none';
-                return;
-            }
+        function openWindowsApp() {
+            if (hash) window.location.href = "todoapp://oauth" + hash;
+        }
 
-            // А. Пытаемся разбудить Windows версию (если установлена)
-            window.location.href = "todoapp://oauth" + fragment;
-
-            // Б. Если есть origin (наш localhost), возвращаемся в Web-вкладку
-            if (origin) {
-                setTimeout(() => {
-                    // Редиректим на http://localhost:PORT/#access_token=...
-                    window.location.href = origin + "/" + fragment;
-                }, 1000);
+        function openWebApp() {
+            if (hash && origin) {
+                // Прямой переход на твой localhost с токеном
+                window.location.href = origin + "/" + hash;
             } else {
-                document.getElementById('sub-msg').innerText = "Готово! Теперь вы можете вернуться в приложение вручную.";
-                document.getElementById('loader').style.display = 'none';
+                alert("Не удалось определить адрес локального сервера.");
             }
         }
 
-        // Автоматический запуск через 1 секунду после загрузки страницы
-        if (fragment) {
-            setTimeout(sendTokenToApp, 1000);
-        } else {
-            document.getElementById('msg').innerText = "❌ Ошибка";
-            document.getElementById('sub-msg').innerText = "Нет данных для авторизации.";
-            document.getElementById('loader').style.display = 'none';
+        // Авто-попытка для Web через 1 секунду, если мы видим localhost
+        if (hash && origin) {
+            setTimeout(openWebApp, 1000);
         }
     </script>
 </body>
