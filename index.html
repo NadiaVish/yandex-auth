@@ -20,23 +20,24 @@
         const origin = urlParams.get('state');
 
         function returnToApp() {
-            if (!hash) return;
+    if (!hash) return;
 
-            // 1. Пытаемся разбудить Windows (todoapp://)
-            window.location.href = "todoapp://oauth" + hash;
+    // 1. Пытаемся разбудить Windows (через невидимую ссылку)
+    const appLink = "todoapp://oauth" + hash;
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = appLink;
+    document.body.appendChild(iframe);
 
-            // 2. Если есть origin (для Web), через секунду редиректим вкладку
-            if (origin && origin !== 'pc_version') {
-                setTimeout(() => {
-                    window.location.href = origin + "/" + hash;
-                }, 500);
-            }
-        }
+    // 2. СРАЗУ ЖЕ делаем редирект для Web в этой же вкладке
+    // Это обновит адрес твоего Web-приложения на localhost
+    if (origin && origin !== 'pc_version') {
+        setTimeout(() => {
+            window.location.href = origin + "/" + hash;
+        }, 300); 
+    }
+}
 
-        // Авто-попытка через 1 секунду
-        if (hash) {
-            setTimeout(returnToApp, 1000);
-        }
     </script>
 </body>
 </html>
