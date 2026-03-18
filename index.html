@@ -41,14 +41,16 @@
     }
 
     function handleWindows() {
+        window.close();
         if (hash) {
             window.location.href = "todoapp://oauth" + hash;
         
         }
-         window.close(); 
+   
     }
 
     function handleWeb() {
+        window.close();
         if (!hash || !origin) {
             alert("Не удалось определить адрес приложения.");
             return;
