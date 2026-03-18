@@ -2,65 +2,79 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Авторизация Todo App</title>
+    <title>Вход выполнен!</title>
     <style>
-        body { font-family: -apple-system, sans-serif; text-align: center; padding-top: 80px; background: #f4f7f9; color: #333; }
-        .container { max-width: 400px; margin: 0 auto; padding: 20px; border-radius: 20px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .btn { background: #3498db; color: white; padding: 16px 30px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; margin-top: 20px; }
-        .success-icon { font-size: 50px; color: #2ecc71; margin-bottom: 10px; }
-        #debug-info { margin-top: 30px; font-size: 11px; color: #ccc; }
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f7f9; }
+        .btn { background: #3498db; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; text-decoration: none; margin: 10px; display: inline-block; width: 300px; font-weight: bold; }
+        .web-btn { background: #2ecc71; }
+        #debug-log { margin-top: 40px; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; text-align: left; display: inline-block; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="success-icon">✅</div>
-        <h2 id="main-msg">Авторизация успешна!</h2>
-        <p id="sub-msg">Связываем данные с вашим приложением...</p>
-        
-        <!-- Эта кнопка нужна ТОЛЬКО для Windows, если авто-запуск заблокирован -->
-        <button class="btn" id="winBtn" onclick="openWindows()">ОТКРЫТЬ В WINDOWS</button>
-        
-        <p style="margin-top: 30px; font-size: 14px; color: #666;">
-            Если вы используете <b>Web-версию</b>:<br>
-            Просто закройте эту вкладку и нажмите кнопку <b>"ГОТОВО"</b> в приложении.
-        </p>
-    </div>
+    <h2>✅ Авторизация успешна</h2>
+    <p>Выберите, куда вы хотите вернуться:</p>
+    
+    <!-- Кнопки, которые ты просила -->
+    <button class="btn" onclick="openWindows()">В ПРИЛОЖЕНИЕ (WINDOWS)</button>
+    <br>
+    <button class="btn web-btn" onclick="openWeb()">В БРАУЗЕР (WEB)</button>
 
-    <div id="debug-info"></div>
+    <br>
+    <div id="debug-log">Инициализация логов...</div>
 
     <script>
         const hash = window.location.hash;
         const urlParams = new URLSearchParams(window.location.search);
-        const origin = urlParams.get('state');
+        const debugElement = document.getElementById('debug-log');
 
-        function log(m) { console.log(m); }
-
-        function openWindows() {
-            if (hash) window.location.href = "todoapp://oauth" + hash;
+        function log(msg) {
+            if(debugElement) debugElement.innerHTML += "<br>" + msg;
+            console.log(msg);
         }
 
-        if (hash) {
-            // 1. Попытка для Windows (автоматически)
-            setTimeout(openWindows, 500);
+        // Ищем порт (state)
+        let origin = urlParams.get('state');
+        if (!origin && hash.includes('state=')) {
+            const hashParams = new URLSearchParams(hash.substring(1));
+            origin = hashParams.get('state');
+        }
 
-            // 2. ДЛЯ WEB: Сохраняем токен в LocalStorage
-            // Это КРИТИЧНО: первая вкладка (localhost) увидит этот токен через SecureStorage
-            const params = new URLSearchParams(hash.substring(1));
-            const token = params.get('access_token');
-            
-            if (token) {
-                // Записываем токен. В Web версии Flutter Secure Storage ищет данные в LocalStorage.
-                // Мы сохраняем его под ключом, который ты используешь в приложении.
-                localStorage.setItem('yandex_token', token);
-                
-                log("Токен сохранен в LocalStorage");
-                document.getElementById('sub-msg').innerText = "Данные получены. Теперь вы можете закрыть это окно.";
+        log("Hash найден: " + (hash ? "ДА" : "НЕТ"));
+        log("Origin: " + origin);
+
+        // Функция для ВЕБА
+        function openWeb() {
+            if (!hash) {
+                log("Ошибка: нет хэша для Веба");
+                return;
             }
-        } else {
-            document.getElementById('main-msg').innerText = "❌ Ошибка";
-            document.getElementById('sub-msg').innerText = "Токен не найден в ссылке.";
-            document.getElementById('winBtn').style.display = 'none';
+            const target = origin || "http://localhost:5000";
+            const finalUrl = target + "/" + hash;
+            log("👉 РЕДИРЕКТ В WEB: " + finalUrl);
+            window.location.href = finalUrl;
+        }
+
+        // Функция для WINDOWS
+        function openWindows() {
+            if (!hash) {
+                log("Ошибка: нет хэша для Windows");
+                return;
+            }
+            const winUrl = "todoapp://oauth" + hash;
+            log("👉 ОТКРЫВАЕМ WINDOWS: " + winUrl);
+            window.location.href = winUrl;
+        }
+
+        // Авто-попытка через 2 секунды (не 20!)
+        if (hash) {
+            setTimeout(() => {
+                log("Запуск авто-редиректа...");
+                if (origin && origin.includes('localhost')) {
+                    openWeb();
+                } else {
+                    openWindows();
+                }
+            }, 2000);
         }
     </script>
 </body>
