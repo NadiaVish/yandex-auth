@@ -33,6 +33,7 @@
 
         log("Hash (token) найден: " + (hash ? "ДА" : "НЕТ"));
         log("Origin (state) из Яндекса: " + stateOrigin);
+        log("Referrer (откуда пришли): " + document.referrer);
 
         function openWindows() {
             if (hash) {
@@ -43,8 +44,8 @@
         }
 
         function openWeb() {
-            const target = stateOrigin || "http://localhost:5000";
-            const finalUrl = target + "/" + hash;
+            const target = stateOrigin || document.referrer || "http://localhost:5000";
+            const finalUrl =target.split('#')[0].split('?')[0] + "/" + hash; ;
             log("Редерикт в WEB: " + finalUrl);
             window.location.href = finalUrl;
         }
