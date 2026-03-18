@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Вход выполнен!</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f4f9; }
+        .btn { background: #3498db; color: white; padding: 15px 25px; text-decoration: none; border-radius: 8px; font-size: 18px; cursor: pointer; border: none; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="status">
+        <h2>✅ Авторизация успешна</h2>
+        <p>Нажмите кнопку ниже, чтобы вернуться в приложение:</p>
+        <button class="btn" onclick="goBack()">ВЕРНУТЬСЯ В TODO APP</button>
+        <div class="loader" id="loader"></div>
+    </div>
+
+    <script>
+        const fragment = window.location.hash;
+
+        function goBack() {
+            if (!fragment) return;
+            
+            // 1. Пытаемся разбудить Windows версию
+            window.location.href = "todoapp://oauth" + fragment;
+
+            // 2. Пытаемся вернуться в Web версию (localhost)
+            // Берем хост из referrer или пробуем стандартный порт 5000
+            const referrer = document.referrer || "http://localhost:5000/";
+            window.location.href = referrer + fragment;
+        }
+
+        // Автоматическая попытка через 1 секунду
+        if (fragment) {
+            setTimeout(goBack, 1000);
+        } else {
+            document.getElementById('status').innerHTML = "<h2>❌ Ошибка: Токен не найден</h2>";
+        }
+    </script>
+</body>
+</html>
