@@ -19,52 +19,48 @@
     <!-- Кнопка для Web -->
     <button id="webBtn" class="btn web-btn" onclick="handleWeb()">ЗАВЕРШИТЬ ВХОД</button>
 
-    <script>
-        const hash = window.location.hash;
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Ищем state (твой origin из loginForWeb)
-        const stateOrigin = urlParams.get('state') || (hash.includes('state=') ? new URLSearchParams(hash.substring(1)).get('state') : null);
-        const isWeb = stateOrigin !== null;
+ <script>
+    const hash = window.location.hash;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // 1. Умный поиск state (порта)
+    let origin = urlParams.get('state');
+    if (!origin && hash.includes('state=')) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        origin = hashParams.get('state');
+    }
 
-        if (isWeb) {
-            document.getElementById('webBtn').style.display = 'inline-block';
-            document.getElementById('instruction').innerText = "Нажмите кнопку, чтобы вернуться в приложение.";
-        } else {
-            document.getElementById('winBtn').style.display = 'inline-block';
-            document.getElementById('instruction').innerText = "Приложение откроется автоматически. Если нет — нажмите кнопку.";
-            // Авто-запуск для Windows
-            setTimeout(handleWindows, 1000);
+    const isWeb = origin !== null;
+
+    if (isWeb) {
+        document.getElementById('webBtn').style.display = 'inline-block';
+        document.getElementById('instruction').innerText = "Нажмите кнопку, чтобы завершить вход.";
+    } else {
+        document.getElementById('winBtn').style.display = 'inline-block';
+        document.getElementById('instruction').innerText = "Возвращаем вас в приложение...";
+        setTimeout(handleWindows, 1000);
+    }
+
+    function handleWindows() {
+        if (hash) {
+            window.location.href = "todoapp://oauth" + hash;
+            setTimeout(() => { window.close(); }, 1500);
+        }
+    }
+
+    function handleWeb() {
+        if (!hash || !origin) {
+            alert("Не удалось определить адрес приложения.");
+            return;
         }
 
-        function handleWindows() {
-            if (hash) {
-                window.location.href = "todoapp://oauth" + hash;
-                // Пытаемся закрыть вкладку через секунду после "пинка" приложения
-                setTimeout(() => { window.close(); }, 1500);
-            }
-        }
+        // ВАЖНО: Мы переходим на localhost текущей вкладкой.
+        // Это обновит адресную строку ПЕРВОЙ вкладки (через DeepLinkHandler) 
+        // или позволит нажать "ГОТОВО" после записи в Storage.
+        // Добавляем флаг &close=true, чтобы Flutter понял: "сохрани и закрой вкладку".
+        window.location.href = origin + "/" + hash + "&close=true";
+    }
+</script>
 
-        function handleWeb() {
-
-             const params = new URLSearchParams(hash.substring(1));
-        const token = params.get('access_token');
-
-        if (token) {
-            // Ключ, который обычно ищет flutter_secure_storage в вебе
-            localStorage.setItem('yandex_token', token); 
-            
-          
-        }
-            // В Вебе нам не нужно никуда переходить, просто закрываемся.
-            // Пользователь окажется в первой вкладке, где нажмет "ГОТОВО".
-             setTimeout(() => { window.close(); }, 1500);
-            window.close();
-            
-            // Если браузер заблокировал автоматическое закрытие:
-            document.getElementById('instruction').innerHTML = 
-                "<b>Вкладка не закрылась?</b><br>Закройте её вручную и нажмите 'ГОТОВО' в приложении.";
-        }
-    </script>
 </body>
 </html>
