@@ -34,11 +34,26 @@
             if (hash) window.location.href = "todoapp://oauth" + hash;
         }
 
-        function openWeb() {
-            const target = origin || "http://localhost:5000";
-            // Редиректим ТЕКУЩУЮ вкладку на твой localhost
-            window.location.href = target + "/" + hash;
-        }
+      function openWeb() {
+    if (!hash) return;
+    
+    // 1. Записываем токен в LocalStorage браузера
+    // Flutter пакет secure_storage в Вебе читает именно отсюда
+    const token = new URLSearchParams(hash.substring(1)).get('access_token');
+    if (token) {
+        // Ключ должен совпадать с тем, что использует flutter_secure_storage
+        // Обычно это префикс 'VGhpcyBpcyB0aGUgcHJlZml4' (зависит от настроек)
+        // Но проще передать сигнал через BroadcastChannel
+        const bc = new BroadcastChannel('auth_channel');
+        bc.postMessage({ token: token });
+        
+        document.getElementById('msg').innerText = "✅ Вход выполнен! Закрываем это окно...";
+        
+        // 2. Пытаемся закрыть вкладку (сработает, если ее открыл скрипт)
+        setTimeout(() => { window.close(); }, 1000);
+    }
+}
+
 
         // НИКАКИХ setTimeout! Страница просто ждет твоего клика.
     </script>
