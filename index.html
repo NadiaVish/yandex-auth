@@ -18,25 +18,27 @@
     
     <button class="btn" onclick="sendTokenToApp()">ВЕРНУТЬСЯ В ПРИЛОЖЕНИЕ</button>
 
-    <script>
-    // 1. Берем фрагмент (там токен) и параметры запроса (там наш state)
+   <script>
+    // Получаем токен из хэша (#access_token=...)
     const fragment = window.location.hash;
-    const urlParams = new URLSearchParams(window.location.search);
     
-    // 2. Достаем наш оригинальный адрес (localhost с нужным портом)
-    const origin = urlParams.get('state') || "http://localhost:5000";
+    // Получаем state из параметров поиска (?state=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const origin = urlParams.get('state');
 
     function sendTokenToApp() {
         if (!fragment) return;
 
-        // Пытаемся разбудить Windows версию
+        // 1. Пытаемся разбудить Windows (todoapp://)
         window.location.href = "todoapp://oauth" + fragment;
 
-        // Пытаемся вернуться в Web (на ПРАВИЛЬНЫЙ порт)
-        setTimeout(() => {
-            window.location.href = origin + "/" + fragment;
-        }, 1000);
-
+        // 2. Если есть origin (localhost с портом), возвращаемся туда
+        if (origin) {
+            setTimeout(() => {
+                window.location.href = origin + "/" + fragment;
+            }, 1000);
+        }
+        
         document.getElementById('msg').innerText = "✅ Готово! Возвращаемся в приложение...";
     }
 
@@ -44,6 +46,7 @@
         setTimeout(sendTokenToApp, 500);
     }
 </script>
+
 
 
 </body>
