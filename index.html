@@ -5,19 +5,19 @@
     <title>Вход выполнен!</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f7f9; }
-        .btn { background: #3498db; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin: 10px; display: inline-block; width: 280px; }
-        .web-btn { background: #2ecc71; } /* Зеленая для Веба */
+        .btn { background: #3498db; color: white; padding: 15px 25px; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; text-decoration: none; margin: 10px; display: inline-block; width: 300px; font-weight: bold; }
+        .web-btn { background: #2ecc71; }
     </style>
 </head>
 <body>
     <h2 id="msg">✅ Авторизация успешна</h2>
-    <p>Куда вы хотите вернуться?</p>
+    <p>Нажмите на кнопку ниже:</p>
     
-    <!-- Ссылка для Windows: она просто дергает протокол -->
-    <a href="#" id="winLink" class="btn">ОТКРЫТЬ ПРИЛОЖЕНИЕ (Windows)</a>
+    <!-- Ссылка для Windows -->
+    <a href="#" id="winLink" class="btn">ОТКРЫТЬ ПРИЛОЖЕНИЕ</a>
     <br>
-    <!-- Ссылка для Web: она ПЕРЕХОДИТ на localhost -->
-    <a href="#" id="webLink" class="btn web-btn">ВЕРНУТЬСЯ В БРАУЗЕР (Web)</a>
+    <!-- Ссылка для Web (localhost) -->
+    <a href="#" id="webLink" class="btn web-btn">ВЕРНУТЬСЯ В БРАУЗЕР (WEB)</a>
 
     <script>
         const hash = window.location.hash;
@@ -25,10 +25,10 @@
         const origin = urlParams.get('state');
 
         if (hash) {
-            // Настраиваем кнопку для Windows
+            // Настраиваем ссылку для Windows (протокол todoapp://)
             document.getElementById('winLink').href = "todoapp://oauth" + hash;
             
-            // Настраиваем кнопку для Web (localhost)
+            // Настраиваем ссылку для Web (редирект на localhost)
             if (origin && origin !== 'pc_version') {
                 document.getElementById('webLink').href = origin + "/" + hash;
             } else {
@@ -36,7 +36,7 @@
             }
         }
 
-        // Авто-попытка ТОЛЬКО для Windows через 1 сек
+        // Авто-попытка только для Windows (часто срабатывает без клика)
         setTimeout(() => {
             if (hash) window.location.href = "todoapp://oauth" + hash;
         }, 1000);
