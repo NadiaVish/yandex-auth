@@ -42,11 +42,19 @@
 
         // Логика для Windows (Только по нажатию!)
         function handleWindows() {
-            if (!hash) return;
+
+if (!hash) return;
+
+                const appUrl = "todoapp://oauth" + hash;
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = appUrl;
+    document.body.appendChild(iframe);
+            
             window.open('', '_self', ''); 
-            window.location.href = "todoapp://oauth" + hash;
+            // window.location.href = "todoapp://oauth" + hash;
             // Хак для закрытия
-            setTimeout(() => { window.close(); }, 300);
+            setTimeout(() => { window.close(); }, 30);
         }
 
         // Логика для Web (Сохранение + Редирект + Авто-закрытие во Flutter)
