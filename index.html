@@ -5,66 +5,61 @@
     <title>Вход выполнен!</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding-top: 80px; background: #f4f7f9; }
-        .btn { background: #db3466; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; text-decoration: none; margin: 10px; display: none; width: 300px; font-weight: bold; }
-        .web-btn { background: #cc2e80; }
+        /* Синяя кнопка для Windows */
+        .btn-win { background: #3498db; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: bold; display: none; width: 300px; }
+        /* Зеленая кнопка для Web */
+        .btn-web { background: #2ecc71; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: bold; display: none; width: 300px; }
     </style>
 </head>
 <body>
-    <h2> ппппппппАвторизация успешна</h2>
-    <p id="instruction">Загрузка...</p>
+    <h2>✅ Авторизация успешна</h2>
+    <p id="instruction">Определяем платформу...</p>
     
-    <!-- Кнопка для Windows -->
-    <button id="winBtn" class="btn" onclick="handleWindows()">ВЕРНУТЬСЯ В ПРИЛОЖЕНИЕ</button>
-    
-    <!-- Кнопка для Web -->
-    <button id="webBtn" class="btn web-btn" onclick="handleWeb()">ЗАВЕРШИТЬ ВХОД</button>
+    <button id="winBtn" class="btn-win" onclick="handleWindows()">В ПРИЛОЖЕНИЕ (WINDOWS)</button>
+    <button id="webBtn" class="btn-web" onclick="handleWeb()">ЗАВЕРШИТЬ ВХОД (WEB)</button>
 
- <script>
-    const hash = window.location.hash;
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // 1. Умный поиск state (порта)
-    let origin = urlParams.get('state');
-    if (!origin && hash.includes('state=')) {
-        const hashParams = new URLSearchParams(hash.substring(1));
-        origin = hashParams.get('state');
-    }
+    <script>
+        const hash = window.location.hash;
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Ищем порт (state), который прислал Flutter
+        let origin = urlParams.get('state');
+        if (!origin && hash.includes('state=')) {
+            const hashParams = new URLSearchParams(hash.substring(1));
+            origin = hashParams.get('state');
+        }
 
-    const isWeb = origin !== null;
+        // Если есть origin (http...) — это Web. Если нет — Windows.
+        const isWeb = origin !== null && origin.includes('http');
 
-    if (isWeb) {
-        document.getElementById('webBtn').style.display = 'inline-block';
-        document.getElementById('instruction').innerText = "Нажмите кнопку, чтобы завершить вход.";
-    } else {
-        document.getElementById('winBtn').style.display = 'inline-block';
-        document.getElementById('instruction').innerText = "Возвращаем вас в приложение...";
-    }
+        if (isWeb) {
+            document.getElementById('webBtn').style.display = 'inline-block';
+            document.getElementById('instruction').innerText = "Нажмите кнопку, чтобы вернуться в браузерную версию.";
+        } else {
+            document.getElementById('winBtn').style.display = 'inline-block';
+            document.getElementById('instruction').innerText = "Нажмите кнопку, чтобы открыть приложение на ПК.";
+        }
 
-    function handleWindows() {
-        window.close();
-        if (hash) {
+        // Логика для Windows (Только по нажатию!)
+        function handleWindows() {
+            if (!hash) return;
             window.location.href = "todoapp://oauth" + hash;
-        
-        }
-   
-    }
-
-    function handleWeb() {
-        window.close();
-        if (!hash || !origin) {
-            alert("Не удалось определить адрес приложения.");
-            return;
+            // Хак для закрытия
+            setTimeout(() => {
+                window.open('', '_self', ''); 
+                window.close();
+            }, 500);
         }
 
-        // ВАЖНО: Мы переходим на localhost текущей вкладкой.
-        // Это обновит адресную строку ПЕРВОЙ вкладки (через DeepLinkHandler) 
-        // или позволит нажать "ГОТОВО" после записи в Storage.
-        // Добавляем флаг &close=true, чтобы Flutter понял: "сохрани и закрой вкладку".
-        window.location.href = origin + "/" + hash + "&close=true";
+        // Логика для Web (Сохранение + Редирект + Авто-закрытие во Flutter)
+        function handleWeb() {
+            if (!hash || !origin) return;
+            // Перебрасываем токен на localhost. 
+            // Там Flutter его сохранит и САМ закроет эту вкладку через window.close()
+            window.location.href = origin + "/" + hash + "&close=true";
+        }
         
-         setTimeout(() => { window.close(); }, 100);
-    }
-</script>
-
+        // НИКАКИХ АВТО-ПЕРЕХОДОВ ТУТ НЕТ. Ждем клика.
+    </script>
 </body>
 </html>
