@@ -43,10 +43,7 @@
     function handleWindows() {
         if (hash) {
             window.location.href = "todoapp://oauth" + hash;
-             setTimeout(() => {
-            window.open('', '_self', ''); 
-            window.close();
-        }, 100); 
+        window.close(); 
         }
     }
 
@@ -61,6 +58,7 @@
         // или позволит нажать "ГОТОВО" после записи в Storage.
         // Добавляем флаг &close=true, чтобы Flutter понял: "сохрани и закрой вкладку".
         window.location.href = origin + "/" + hash + "&close=true";
+        
          setTimeout(() => { window.close(); }, 100);
     }
 </script>
