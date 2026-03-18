@@ -18,37 +18,32 @@
     
     <button class="btn" onclick="sendTokenToApp()">ВЕРНУТЬСЯ В ПРИЛОЖЕНИЕ</button>
 
-    <script>
-        // 1. Берем токен
+        <script>
         const hash = window.location.hash;
 
         function sendTokenToApp() {
-            if (!hash) {
-                document.getElementById('msg').innerText = "❌ Ошибка: Токен не найден";
-                return;
-            }
+            if (!hash) return;
 
-            // Пытаемся разбудить Windows (todoapp://)
+            // 1. Для Windows (todoapp://)
             window.location.href = "todoapp://oauth" + hash;
 
-            // Пытаемся вернуться в Web (localhost)
-            // Пытаемся найти адрес, откуда пришли, или используем стандартные порты
-            const currentHost = window.location.origin;
+            // 2. Для Web (localhost с динамическим портом)
+            // Пытаемся взять точный адрес, откуда пришел пользователь
             const referrer = document.referrer;
             
-            // Если мы пришли с локалхоста - возвращаемся туда
             if (referrer && (referrer.includes('localhost') || referrer.includes('127.0.0.1'))) {
+                // Редиректим именно туда, где запущено приложение ПРЯМО СЕЙЧАС
                 window.location.href = referrer + hash;
             } else {
-                // Если реферер пустой, пробуем самые частые порты Flutter Web
-                window.location.href = "http://localhost:5000/" + hash;
+                // Если реферер потерялся, пишем инструкцию
+                document.getElementById('msg').innerText = "⚠️ Не удалось определить порт приложения. Вернитесь в него вручную.";
             }
         }
 
-        // Авто-попытка только через 2 секунды (чтобы не было чехарды)
         if (hash) {
-            setTimeout(sendTokenToApp, 2000);
+            setTimeout(sendTokenToApp, 1000);
         }
-    </script>
+        </script>
+
 </body>
 </html>
