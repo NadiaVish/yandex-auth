@@ -20,35 +20,38 @@
 
     <div id="debug-log">Инициализация логов...</div>
 
-    <script>
-        const hash = window.location.hash;
-        const urlParams = new URLSearchParams(window.location.search);
-        const stateOrigin = urlParams.get('state');
-        const debugElement = document.getElementById('debug-log');
+  <script>
+    const hash = window.location.hash; // Тут всё: #state=...&access_token=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const debugElement = document.getElementById('debug-log');
 
-        function log(msg) {
-            debugElement.innerHTML += "<br>" + msg;
-            console.log(msg);
-        }
+    function log(msg) {
+        debugElement.innerHTML += "<br>" + msg;
+        console.log(msg);
+    }
 
-        log("Hash (token) найден: " + (hash ? "ДА" : "НЕТ"));
-        log("Origin (state) из Яндекса: " + stateOrigin);
-        log("Referrer (откуда пришли): " + document.referrer);
+    // Умный поиск state: сначала в URL, потом внутри хэша
+    let origin = urlParams.get('state');
+    if (!origin && hash.includes('state=')) {
+        const hashParams = new URLSearchParams(hash.substring(1));
+        origin = hashParams.get('state');
+    }
 
-        function openWindows() {
-            if (hash) {
-                const url = "todoapp://oauth" + hash;
-                log("Отправка в Windows: " + url);
-                window.location.href = url;
-            }
-        }
+    log("Hash найден: " + (hash ? "ДА" : "НЕТ"));
+    log("Реальный Origin (из state): " + origin);
 
-        function openWeb() {
-            const target = stateOrigin || document.referrer || "http://localhost:5000";
-            const finalUrl =target.split('#')[0].split('?')[0] + "/" + hash; ;
-            log("Редерикт в WEB: " + finalUrl);
-            window.location.href = finalUrl;
-        }
-    </script>
+    function openWeb() {
+        // Теперь мы точно знаем порт (64136)
+        const target = origin || "http://localhost:5000";
+        const finalUrl = target + "/" + hash;
+        log("👉 РЕДИРЕКТ В WEB: " + finalUrl);
+        window.location.href = finalUrl;
+    }
+
+    if (hash) {
+        setTimeout(openWeb, 1000);
+    }
+</script>
+
 </body>
 </html>
