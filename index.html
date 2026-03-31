@@ -2,74 +2,75 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Авторизация выполнена</title>
+    <title>Вход выполнен!</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding-top: 80px; background: #f4f7f9; }
-        .btn { background: #d88dc9; color: white; padding: 18px 30px; border: none; border-radius: 12px; 
-               font-size: 18px; cursor: pointer; font-weight: bold; width: 300px; margin: 20px; }
+        /* Синяя кнопка для Windows */
+        .btn-win { background: #d88dc9; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: bold; display: none; width: 300px; }
+        /* Зеленая кнопка для Web */
+        .btn-web { background: #d88dc9; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: bold; display: none; width: 300px; }
     </style>
 </head>
 <body>
     <h2>✅ Авторизация успешна</h2>
     <p id="instruction">Определяем платформу...</p>
     
-    <button id="winBtn" class="btn" onclick="handleWindows()" style="display:none;">В ПРИЛОЖЕНИЕ (WINDOWS)</button>
-    <button id="webBtn" class="btn" onclick="handleWeb()" style="display:none;">ЗАВЕРШИТЬ ВХОД</button>
+    <button id="winBtn" class="btn-win" onclick="handleWindows()">В ПРИЛОЖЕНИЕ (WINDOWS)</button>
+    <button id="webBtn" class="btn-web" onclick="handleWeb()">ЗАВЕРШИТЬ ВХОД (WEB)</button>
 
     <script>
         const hash = window.location.hash;
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // Ищем порт (state), который прислал Flutter
         let origin = urlParams.get('state');
         if (!origin && hash.includes('state=')) {
             const hashParams = new URLSearchParams(hash.substring(1));
             origin = hashParams.get('state');
         }
 
+        // Если есть origin (http...) — это Web. Если нет — Windows.
         const isWeb = origin !== null && origin.includes('http');
 
         if (isWeb) {
             document.getElementById('webBtn').style.display = 'inline-block';
-            document.getElementById('instruction').innerText = "Сейчас вернём вас обратно в приложение...";
-            // Автоматически редиректим обратно (без кнопки — удобнее)
-            setTimeout(() => handleWeb(), 800);
+            document.getElementById('instruction').innerText = "Нажмите кнопку, чтобы вернуться в браузерную версию.";
         } else {
             document.getElementById('winBtn').style.display = 'inline-block';
-            document.getElementById('instruction').innerText = "Нажмите кнопку, чтобы открыть приложение.";
+            document.getElementById('instruction').innerText = "Нажмите кнопку, чтобы открыть приложение на ПК.";
         }
 
+        // Логика для Windows (Только по нажатию!)
         function handleWindows() {
-            if (!hash) return;
-            const appUrl = "todoapp://oauth" + hash;
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-            iframe.src = appUrl;
-            document.body.appendChild(iframe);
 
-            // Пытаемся закрыть вкладку мягко
-            setTimeout(() => {
-                window.open('', '_self');
-                window.close();
-            }, 500);
+if (!hash) return;
+
+                const appUrl = "todoapp://oauth" + hash;
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = appUrl;
+    document.body.appendChild(iframe);
+            
+            window.open('', '_self', ''); 
+            // window.location.href = "todoapp://oauth" + hash;
+            // Хак для закрытия
+            setTimeout(() => { window.close(); }, 30);
         }
 
+        // Логика для Web (Сохранение + Редирект + Авто-закрытие во Flutter)
         function handleWeb() {
             if (!hash || !origin) return;
-            
-            // Важно: редиректим в ИСХОДНУЮ вкладку, добавляя флаг close=true
-            let targetUrl = origin;
-            if (targetUrl.includes('#')) {
-                targetUrl += hash.replace('#', '&'); // если уже есть hash
-            } else {
-                targetUrl += "/#" + hash.substring(1);
-            }
-            if (!targetUrl.includes('close=true')) {
-                targetUrl += (targetUrl.includes('?') ? '&' : '?') + 'close=true';
-            }
-
-            window.location.href = targetUrl;   // ← это остаётся в той же вкладке!
-            
-            // Не закрываем сразу — пусть Flutter сам обработает и почистит URL
+            //window.location.href = origin + "/" + hash + "&close=true";
+             const targetUrl = origin + "/#" + hash.replace('#', '') + "&close=true";
+            window.location.href = targetUrl;
+             setTimeout(() => { window.close(); }, 300);
         }
+
+
+        
+
+        
+        // НИКАКИХ АВТО-ПЕРЕХОДОВ ТУТ НЕТ. Ждем клика.
     </script>
 </body>
 </html>
