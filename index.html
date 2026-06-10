@@ -74,10 +74,10 @@
 
     <script>
         const hash = window.location.hash;
-        let redirectAttempted = false;
+        let successShown = false;
 
         function handleWindows() {
-            if (redirectAttempted) return;
+            if (successShown) return;
             
             // Показываем спиннер
             document.getElementById('initialView').style.display = 'none';
@@ -86,38 +86,32 @@
             if (!hash) return;
 
             const appUrl = "todoapp://oauth" + hash;
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-            iframe.src = appUrl;
-            document.body.appendChild(iframe);
             
-            redirectAttempted = true;
+            // Пытаемся открыть приложение
+            window.location.href = appUrl;
             
-            // Проверяем, была ли переадресация
-            // Если через 1 секунду страница всё ещё видна - значит переадресация не произошла
+            // Если через 1 секунду страница всё ещё здесь - значит переадресация не удалась
             setTimeout(() => {
-                // Проверяем, не закрылась ли страница и не показан ли уже успех
-                if (document.getElementById('spinner').style.display === 'block') {
+                if (!successShown && document.getElementById('spinner').style.display === 'block') {
                     document.getElementById('spinner').style.display = 'none';
                     document.getElementById('errorView').style.display = 'block';
-                    redirectAttempted = false;
                 }
             }, 1000);
         }
 
         function resetAndTryAgain() {
-            // Скрываем ошибку, показываем начальный экран
             document.getElementById('errorView').style.display = 'none';
             document.getElementById('initialView').style.display = 'block';
-            redirectAttempted = false;
+            successShown = false;
         }
 
-        // Если страница была свёрнута (пользователь перешёл в приложение) - показываем успех
-        window.addEventListener('blur', () => {
-            if (redirectAttempted) {
+        // Отслеживаем, когда страница теряет фокус (пользователь перешёл в приложение)
+        window.addEventListener('blur', function() {
+            if (!successShown && document.getElementById('spinner').style.display === 'block') {
+                successShown = true;
                 document.getElementById('spinner').style.display = 'none';
                 document.getElementById('successView').style.display = 'block';
-                // Закрываем через 3 секунды
+                
                 setTimeout(() => { window.close(); }, 3000);
             }
         });
