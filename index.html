@@ -6,8 +6,8 @@
     <style>
         body { font-family: sans-serif; text-align: center; padding-top: 80px; background: #f4f7f9; }
         .btn { background: #d88dc9; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: bold; width: 300px; margin-top: 20px; }
-        .success-message { 
-            background: #4CAF50; 
+        .message { 
+            background: #a8ccd5; 
             color: white; 
             padding: 20px; 
             border-radius: 12px; 
@@ -15,17 +15,7 @@
             margin: 20px auto;
             display: none;
         }
-        .error-message { 
-            background: #f44336; 
-            color: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            max-width: 400px; 
-            margin: 20px auto;
-            display: none;
-        }
-        .success-message h3, .error-message h3 { margin: 0 0 10px 0; }
-        .success-message p, .error-message p { margin: 0; }
+        .message p { margin: 0; font-size: 18px; }
         .spinner {
             display: none;
             width: 40px;
@@ -40,81 +30,41 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .return-btn {
-            background: #d88dc9;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
     <div id="initialView">
         <h2>✅ Почти готово</h2>
-        <p id="instruction">Нажмите кнопку, чтобы подтвердить авторизацию.</p>
+        <p>Нажмите кнопку, чтобы подтвердить авторизацию.</p>
         <button id="confirmBtn" class="btn" onclick="handleWindows()">ПОДТВЕРДИТЬ ВХОД</button>
     </div>
     
-    <div id="successView" class="success-message">
-        <h3>🎉 Отлично!</h3>
-        <p>Вход выполнен! Теперь можно закрыть эту страницу и вернуться в приложение.</p>
-    </div>
-    
-    <div id="errorView" class="error-message">
-        <h3>❌ Переадресация не выполнена</h3>
-        <p>Вы отменили переход в приложение. Нажмите кнопку ниже, чтобы попробовать снова.</p>
-        <button class="return-btn" onclick="resetAndTryAgain()">Попробовать снова</button>
+    <div id="messageView" class="message">
+        <p>✅ После подтверждения переадресации можно закрыть эту страницу и вернуться в приложение.</p>
     </div>
     
     <div id="spinner" class="spinner"></div>
 
     <script>
         const hash = window.location.hash;
-        let successShown = false;
 
         function handleWindows() {
-            if (successShown) return;
-            
-            // Показываем спиннер
             document.getElementById('initialView').style.display = 'none';
             document.getElementById('spinner').style.display = 'block';
             
             if (!hash) return;
 
             const appUrl = "todoapp://oauth" + hash;
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.src = appUrl;
+            document.body.appendChild(iframe);
             
-            // Пытаемся открыть приложение
-            window.location.href = appUrl;
-            
-            // Если через 1 секунду страница всё ещё здесь - значит переадресация не удалась
             setTimeout(() => {
-                if (!successShown && document.getElementById('spinner').style.display === 'block') {
-                    document.getElementById('spinner').style.display = 'none';
-                    document.getElementById('errorView').style.display = 'block';
-                }
-            }, 1000);
-        }
-
-        function resetAndTryAgain() {
-            document.getElementById('errorView').style.display = 'none';
-            document.getElementById('initialView').style.display = 'block';
-            successShown = false;
-        }
-
-        // Отслеживаем, когда страница теряет фокус (пользователь перешёл в приложение)
-        window.addEventListener('blur', function() {
-            if (!successShown && document.getElementById('spinner').style.display === 'block') {
-                successShown = true;
                 document.getElementById('spinner').style.display = 'none';
-                document.getElementById('successView').style.display = 'block';
-                
-                setTimeout(() => { window.close(); }, 3000);
-            }
-        });
+                document.getElementById('messageView').style.display = 'block';
+            }, 500);
+        }
     </script>
 </body>
 </html>
