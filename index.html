@@ -6,6 +6,7 @@
     <style>
         body { font-family: sans-serif; text-align: center; padding-top: 80px; background: #f4f7f9; }
         .btn { background: #d88dc9; color: white; padding: 18px 30px; border: none; border-radius: 12px; font-size: 18px; cursor: pointer; font-weight: bold; width: 300px; margin-top: 20px; }
+        .btn:hover { opacity: 0.9; }
         .message { 
             background: #a8ccd5; 
             color: white; 
@@ -35,8 +36,8 @@
 <body>
     <div id="initialView">
         <h2>✅ Почти готово</h2>
-        <p>Нажмите кнопку, чтобы подтвердить авторизацию.</p>
-        <button id="confirmBtn" class="btn" onclick="handleWindows()">ПОДТВЕРДИТЬ ВХОД</button>
+        <p id="instruction">Нажмите кнопку, чтобы подтвердить авторизацию.</p>
+        <button id="confirmBtn" class="btn" onclick="handleConfirm()">ПОДТВЕРДИТЬ ВХОД</button>
     </div>
     
     <div id="messageView" class="message">
@@ -47,23 +48,53 @@
 
     <script>
         const hash = window.location.hash;
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Ищем порт (state), который прислал Flutter
+        let origin = urlParams.get('state');
+        if (!origin && hash.includes('state=')) {
+            const hashParams = new URLSearchParams(hash.substring(1));
+            origin = hashParams.get('state');
+        }
 
-        function handleWindows() {
+        // Определяем платформу: если есть origin c http — это Web, иначе Windows
+        const isWeb = origin !== null && origin.includes('http');
+
+        // Меняем текст инструкции в зависимости от платформы
+        const instruction = document.getElementById('instruction');
+        if (isWeb) {
+            instruction.innerText = "Нажмите кнопку, чтобы завершить вход в браузерной версии.";
+        } else {
+            instruction.innerText = "Нажмите кнопку, чтобы открыть приложение на ПК.";
+        }
+
+        function handleConfirm() {
             document.getElementById('initialView').style.display = 'none';
             document.getElementById('spinner').style.display = 'block';
             
             if (!hash) return;
 
-            const appUrl = "todoapp://oauth" + hash;
-            const iframe = document.createElement("iframe");
-            iframe.style.display = "none";
-            iframe.src = appUrl;
-            document.body.appendChild(iframe);
-            
-            setTimeout(() => {
-                document.getElementById('spinner').style.display = 'none';
-                document.getElementById('messageView').style.display = 'block';
-            }, 500);
+            if (isWeb) {
+                // 👇 ЛОГИКА ДЛЯ WEB (БРАУЗЕРОВ)
+                // Отправляем токен обратно в Flutter Web
+                const targetUrl = origin + "/#" + hash.replace('#', '') + "&close=true";
+                window.location.href = targetUrl;
+                
+                // Через 300мс закрываем окно
+                setTimeout(() => { window.close(); }, 300);
+            } else {
+                // 👇 ЛОГИКА ДЛЯ WINDOWS (ПК) — ТВОЯ РАБОТАЮЩАЯ ВЕРСИЯ
+                const appUrl = "todoapp://oauth" + hash;
+                const iframe = document.createElement("iframe");
+                iframe.style.display = "none";
+                iframe.src = appUrl;
+                document.body.appendChild(iframe);
+                
+                setTimeout(() => {
+                    document.getElementById('spinner').style.display = 'none';
+                    document.getElementById('messageView').style.display = 'block';
+                }, 500);
+            }
         }
     </script>
 </body>
